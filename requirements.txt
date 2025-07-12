@@ -1,4 +1,5 @@
 selenium
 python-dotenv
 tqdm
-pip install pandas scikit-learn
+pandas
+scikit-learn
