@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from tqdm import tqdm
 from selenium import webdriver
@@ -6,6 +7,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service 
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+# Add parent directory to path to import config
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import DOMAIN_URL, API_URL, RAW_DATA_DIR, START, END
 
 os.makedirs(RAW_DATA_DIR, exist_ok=True)
