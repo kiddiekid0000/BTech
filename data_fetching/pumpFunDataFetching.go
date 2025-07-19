@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -83,6 +84,51 @@ type UnifiedTokenData struct {
 	Label int `json:"label"` // Added label field
 }
 
+// checkForDuplicateMint checks if the given mint address already exists in any JSON file
+func checkForDuplicateMint(mint string) error {
+	outputDir := "json_output"
+	
+	// Check if directory exists
+	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+		// Directory doesn't exist, no duplicates possible
+		return nil
+	}
+	
+	// Read all files in the json_output directory
+	files, err := ioutil.ReadDir(outputDir)
+	if err != nil {
+		return fmt.Errorf("failed to read directory %s: %v", outputDir, err)
+	}
+	
+	// Check each JSON file
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".json") {
+			continue // Skip non-JSON files
+		}
+		
+		filePath := filepath.Join(outputDir, file.Name())
+		jsonData, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Printf("Warning: failed to read file %s: %v", filePath, err)
+			continue
+		}
+		
+		// Parse JSON to extract mint field
+		var tokenData UnifiedTokenData
+		if err := json.Unmarshal(jsonData, &tokenData); err != nil {
+			log.Printf("Warning: failed to parse JSON in file %s: %v", filePath, err)
+			continue
+		}
+		
+		// Check if mint matches
+		if tokenData.Mint == mint {
+			return fmt.Errorf("duplicate mint address detected: %s already exists in file: %s", mint, filePath)
+		}
+	}
+	
+	return nil
+}
+
 func fetchJSON(url string, result interface{}) error {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("X-API-Key", apiKey)
@@ -99,6 +145,11 @@ func fetchJSON(url string, result interface{}) error {
 
 func main() {
 	token := tokenMint
+
+	// Check for duplicate mint address before processing
+	if err := checkForDuplicateMint(token); err != nil {
+		log.Fatal("Duplicate check failed: ", err)
+	}
 
 	// Fetch metadata
 	meta := MetadataResponse{}
