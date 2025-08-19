@@ -105,7 +105,7 @@ async function detectToken(tokenId, corsHeaders) {
 				name: tokenMeta.name || 'Unknown Token',
 				symbol: tokenMeta.symbol || 'UNK',
 				score_normalized: scoreNormalised,
-				risk_level: scoreNormalised >= 62 ? 'Fraud' : 'Safe',
+				risk_level: scoreNormalised >= 63 ? 'Fraud' : 'Safe',
 				market_cap: marketCap,
 				liquidity: totalLiquidity,
 				volume_24h: 0, // Not available in this API
