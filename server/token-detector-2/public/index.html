@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pump.fun Token Anomaly Detector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #ec4899;
+            --accent-color: #10b981;
+            --background-color: #0f172a;
+            --surface-color: #1e293b;
+            --card-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #475569;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --border-radius: 12px;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--background-color) 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0 4rem;
+        }
+
+        .card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .token-search {
+            position: relative;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .suggestion-item:hover {
+            background: var(--card-color);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .suggestion-symbol {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Analysis Results */
+        .analysis-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .token-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .token-info h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .token-symbol {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-score {
+            margin-left: auto;
+            text-align: center;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            min-width: 120px;
+        }
+
+        .risk-score.low {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success-color);
+        }
+
+        .risk-score.medium {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning-color);
+        }
+
+        .risk-score.high {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-color);
+        }
+
+        .risk-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+            color: var(--text-muted);
+        }
+
+        .risk-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .risk-score.low .risk-value {
+            color: var(--success-color);
+        }
+
+        .risk-score.medium .risk-value {
+            color: var(--warning-color);
+        }
+
+        .risk-score.high .risk-value {
+            color: var(--danger-color);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-item {
+            background: var(--card-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .anomaly-list {
+            background: var(--card-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .anomaly-list h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .anomaly-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .anomaly-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .anomaly-icon {
+            color: var(--danger-color);
+            font-size: 1rem;
+        }
+
+        .anomaly-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Info Sections */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .info-card {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .info-card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .info-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .info-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 4rem;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--surface-color);
+                flex-direction: column;
+                padding: 1rem;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .token-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .risk-score {
+                margin-left: 0;
+                margin-top: 1rem;
+                align-self: stretch;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    Pump.fun Token Anomaly Detector
+                </a>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#how-it-works">How it Works</a></li>
+                </ul>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Detect Anomalous Tokens</h1>
+                <p>Advanced token analysis tool for Pump.fun. Search for any token and instantly identify suspicious patterns, anomalies, and risk factors with our comprehensive detection system.</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-search" style="color: var(--primary-color); font-size: 1.5rem;"></i>
+                    <h2 class="card-title">Token Analysis</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="tokenInput" class="form-label">
+                        <i class="fas fa-coins"></i> Search Token (Name, Symbol, or Contract Address)
+                    </label>
+                    <div class="token-search">
+                        <input 
+                            type="text" 
+                            id="tokenInput" 
+                            class="form-input" 
+                            placeholder="Enter token name, symbol (e.g., PEPE), or contract address..."
+                            autocomplete="off"
+                        >
+                        <div id="searchSuggestions" class="search-suggestions"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button id="analyzeBtn" class="btn btn-primary btn-large">
+                        <i class="fas fa-search"></i> Analyze Token
+                    </button>
+                </div>
+
+                <div id="resultsSection" class="hidden">
+                    <div class="analysis-card">
+                        <div class="token-header">
+                            <div class="token-info">
+                                <h3 id="tokenName">Token Name</h3>
+                                <div class="token-symbol" id="tokenSymbol">SYMBOL</div>
+                            </div>
+                            <div class="risk-score" id="riskScore">
+                                <div class="risk-label">Assessment</div>
+                                <div class="risk-value" id="riskValue">Safe</div>
+                            </div>
+                        </div>
+
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-label">Market Cap</div>
+                                <div class="metric-value" id="marketCap">$0</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Liquidity</div>
+                                <div class="metric-value" id="liquidity">$0</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Volume (24h)</div>
+                                <div class="metric-value" id="volume24h">$0</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Holders</div>
+                                <div class="metric-value" id="holders">0</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Creation Date</div>
+                                <div class="metric-value" id="creationDate">-</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Creator Holdings</div>
+                                <div class="metric-value" id="creatorHoldings">0%</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Risk Score</div>
+                                <div class="metric-value" id="riskScoreValue">0</div>
+                            </div>
+                        </div>
+
+                        <div class="anomaly-list">
+                            <h4>
+                                <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
+                                Detected Anomalies
+                            </h4>
+                            <div id="anomaliesList">
+                                <!-- Anomalies will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section id="how-it-works" class="container">
+        <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: var(--text-primary);">How It Works</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Market Analysis</h3>
+                <p>Analyzes token metrics including market cap, liquidity, trading volume, and holder distribution to identify tokens with unusual characteristics or suspicious trading patterns.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Holder Distribution</h3>
+                <p>Examines token holder patterns, concentration of ownership, and creator holdings to detect potential rug pull risks or market manipulation scenarios.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Risk Assessment</h3>
+                <p>Combines multiple risk factors including liquidity depth, recent creation, holder concentration, and trading patterns to provide an overall risk score for each token.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Pump.fun Token Anomaly Detector. Not affiliated with Pump.fun. For educational and research purposes only.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mock token database for suggestions and analysis
+        const tokenDatabase = [
+            { name: "Pepe", symbol: "PEPE", address: "0x6982508145454Ce325dDbE47a25d4ec3d2311933" },
+            { name: "Shiba Inu", symbol: "SHIB", address: "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE" },
+            { name: "Dogecoin", symbol: "DOGE", address: "0xbA2aE424d960c26247Dd6c32edC70B295c744C43" },
+            { name: "SafeMoon", symbol: "SAFEMOON", address: "0x8076c74c5e3f5852037f31ff0093eeb8c8add8d3" },
+            { name: "Floki Inu", symbol: "FLOKI", address: "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e" },
+        ];
+
+        // DOM elements
+        const tokenInput = document.getElementById('tokenInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const tokenName = document.getElementById('tokenName');
+        const tokenSymbol = document.getElementById('tokenSymbol');
+        const riskScore = document.getElementById('riskScore');
+        const riskValue = document.getElementById('riskValue');
+        const marketCap = document.getElementById('marketCap');
+        const liquidity = document.getElementById('liquidity');
+        const volume24h = document.getElementById('volume24h');
+        const holders = document.getElementById('holders');
+        const creationDate = document.getElementById('creationDate');
+        const creatorHoldings = document.getElementById('creatorHoldings');
+        const riskScoreValue = document.getElementById('riskScoreValue');
+        const anomaliesList = document.getElementById('anomaliesList');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        // Mobile menu toggle
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Search suggestions
+        tokenInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query.length < 2) {
+                searchSuggestions.style.display = 'none';
+                return;
+            }
+
+            const matches = tokenDatabase.filter(token => 
+                token.name.toLowerCase().includes(query) || 
+                token.symbol.toLowerCase().includes(query) ||
+                token.address.toLowerCase().includes(query)
+            );
+
+            if (matches.length > 0) {
+                searchSuggestions.innerHTML = matches.map(token => `
+                    <div class="suggestion-item" data-token='${JSON.stringify(token)}'>
+                        <div class="suggestion-name">${token.name}</div>
+                        <div class="suggestion-symbol">${token.symbol}</div>
+                    </div>
+                `).join('');
+                searchSuggestions.style.display = 'block';
+            } else {
+                searchSuggestions.style.display = 'none';
+            }
+        });
+
+        // Handle suggestion clicks
+        searchSuggestions.addEventListener('click', (e) => {
+            const suggestionItem = e.target.closest('.suggestion-item');
+            if (suggestionItem) {
+                const token = JSON.parse(suggestionItem.dataset.token);
+                tokenInput.value = `${token.name} (${token.symbol})`;
+                searchSuggestions.style.display = 'none';
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.token-search')) {
+                searchSuggestions.style.display = 'none';
+            }
+        });
+
+        // Token anomaly detection API call
+        async function analyzeToken(tokenQuery) {
+            try {
+                // For this demo, we'll use the token query as the token ID
+                // In a real implementation, you might need to resolve token names to IDs first
+                const tokenId = extractTokenId(tokenQuery);
+                
+                const response = await fetch(`/detect/${tokenId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Transform API response to match frontend expectations
+                    return {
+                        name: data.name,
+                        symbol: data.symbol,
+                        marketCap: data.market_cap || 0,
+                        liquidity: data.liquidity || 0,
+                        volume24h: data.volume_24h || 0,
+                        holders: data.holders || 0,
+                        creationDate: data.creation_date ? new Date(data.creation_date) : new Date(),
+                        creatorHoldings: data.creator_holdings || 0,
+                        anomalies: data.anomalies && data.anomalies.length > 0 ? data.anomalies : ['No specific anomalies detected'],
+                        riskLevel: data.risk_level === 'Fraud' ? 'high' : 'low',
+                        scoreNormalized: data.score_normalized || 0,
+                        apiStatus: 'success'
+                    };
+                } else {
+                    // Return error information
+                    return {
+                        name: "Error",
+                        symbol: "ERR",
+                        marketCap: 0,
+                        liquidity: 0,
+                        volume24h: 0,
+                        holders: 0,
+                        creationDate: new Date(),
+                        creatorHoldings: 0,
+                        anomalies: [data.message || 'Failed to fetch token data'],
+                        riskLevel: 'medium',
+                        scoreNormalized: 0,
+                        apiStatus: 'error',
+                        error: data.error
+                    };
+                }
+            } catch (error) {
+                console.error('Error analyzing token:', error);
+                return {
+                    name: "Network Error",
+                    symbol: "ERR",
+                    marketCap: 0,
+                    liquidity: 0,
+                    volume24h: 0,
+                    holders: 0,
+                    creationDate: new Date(),
+                    creatorHoldings: 0,
+                    anomalies: ['Network error: Unable to fetch token data'],
+                    riskLevel: 'medium',
+                    scoreNormalized: 0,
+                    apiStatus: 'error',
+                    error: error.message
+                };
+            }
+        }
+
+        // Extract token ID from user input
+        function extractTokenId(tokenQuery) {
+            // Check if it's already a token address (starts with alphanumeric and has appropriate length)
+            if (/^[a-zA-Z0-9]{32,}$/.test(tokenQuery.trim())) {
+                return tokenQuery.trim();
+            }
+            
+            // Check if it's in the known token database
+            const knownToken = tokenDatabase.find(token => 
+                tokenQuery.toLowerCase().includes(token.name.toLowerCase()) ||
+                tokenQuery.toLowerCase().includes(token.symbol.toLowerCase())
+            );
+            
+            if (knownToken) {
+                return knownToken.address;
+            }
+            
+            // If not found, return the query as-is (API will handle it)
+            return tokenQuery.trim();
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return `$${(amount / 1000000).toFixed(1)}M`;
+            } else if (amount >= 1000) {
+                return `$${(amount / 1000).toFixed(1)}K`;
+            } else {
+                return `$${amount.toLocaleString()}`;
+            }
+        }
+
+        // Format date
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // Analyze token
+        analyzeBtn.addEventListener('click', async () => {
+            const query = tokenInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a token name, symbol, or contract address.');
+                return;
+            }
+
+            // Show loading state
+            const originalText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '<div class="loading"></div> Analyzing...';
+            analyzeBtn.disabled = true;
+
+            try {
+                const results = await analyzeToken(query);
+
+                // Update token info
+                tokenName.textContent = results.name;
+                tokenSymbol.textContent = results.symbol;
+
+                // Update risk score - display Safe/Fraud based on score
+                const displayRisk = results.scoreNormalized >= 62 ? 'Fraud' : 'Safe';
+                const riskClass = results.scoreNormalized >= 62 ? 'high' : 'low';
+                
+                riskScore.className = `risk-score ${riskClass}`;
+                riskValue.textContent = displayRisk;
+
+                // Update metrics
+                marketCap.textContent = formatCurrency(results.marketCap);
+                liquidity.textContent = formatCurrency(results.liquidity);
+                volume24h.textContent = formatCurrency(results.volume24h);
+                holders.textContent = results.holders.toLocaleString();
+                creationDate.textContent = formatDate(results.creationDate);
+                creatorHoldings.textContent = `${results.creatorHoldings}%`;
+                riskScoreValue.textContent = results.scoreNormalized.toFixed(1);
+
+                // Update anomalies
+                anomaliesList.innerHTML = results.anomalies.map(anomaly => `
+                    <div class="anomaly-item">
+                        <i class="fas fa-exclamation-triangle anomaly-icon"></i>
+                        <span class="anomaly-text">${anomaly}</span>
+                    </div>
+                `).join('');
+
+                // Show results
+                resultsSection.classList.remove('hidden');
+
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                console.error('Error during analysis:', error);
+                alert('An error occurred while analyzing the token. Please try again.');
+            } finally {
+                // Reset button
+                analyzeBtn.innerHTML = originalText;
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        // Handle Enter key in input
+        tokenInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                analyzeBtn.click();
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
