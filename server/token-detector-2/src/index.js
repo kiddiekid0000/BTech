@@ -1,7 +1,10 @@
 /**
  * Token Anomaly Detector - Cloudflare Worker
  * Converted from Python Flask API to JavaScript
+ * Includes ML-based prediction capabilities
  */
+
+import { predictTokenRisk } from './model.js';
 
 export default {
 	async fetch(request, env, ctx) {
@@ -34,6 +37,19 @@ export default {
 					});
 				}
 				return await detectToken(tokenId, corsHeaders);
+			} else if (url.pathname.startsWith('/predict/')) {
+				const tokenId = url.pathname.split('/predict/')[1];
+				if (!tokenId) {
+					return new Response(JSON.stringify({
+						status: 'error',
+						error: 'Token ID is required',
+						message: 'Please provide a valid token ID'
+					}), {
+						status: 400,
+						headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+					});
+				}
+				return await predictToken(tokenId, corsHeaders);
 			} else if (url.pathname === '/' || url.pathname === '') {
 				return await serveHomePage(corsHeaders);
 			} else {
@@ -85,34 +101,21 @@ async function detectToken(tokenId, corsHeaders) {
 			// Calculate creator holdings percentage
 			const creatorHoldingsPct = totalSupply > 0 ? (creatorBalance / totalSupply) * 100 : 0;
 			
-			// Extract anomalies from risks
-			let anomalies = [];
-			for (const risk of risks) {
-				let riskDesc = risk.description || risk.name || 'Unknown risk';
-				if (risk.value) {
-					riskDesc += ` (${risk.value})`;
-				}
-				anomalies.push(riskDesc);
-			}
-			
-			if (anomalies.length === 0) {
-				anomalies = ['No specific risks detected in API response'];
-			}
+			// Removed anomalies extraction
 			
 			const processedData = {
 				token_id: tokenId,
 				status: 'success',
 				name: tokenMeta.name || 'Unknown Token',
 				symbol: tokenMeta.symbol || 'UNK',
-				score_normalized: scoreNormalised,
+
 				risk_level: scoreNormalised >= 63 ? 'Fraud' : 'Safe',
 				market_cap: marketCap,
 				liquidity: totalLiquidity,
-				volume_24h: 0, // Not available in this API
+
 				holders: totalHolders,
 				creation_date: data.detectedAt || '',
-				creator_holdings: creatorHoldingsPct,
-				anomalies: anomalies,
+
 				price: price,
 				raw_data: data // Include full raw data for debugging
 			};
@@ -157,6 +160,64 @@ async function detectToken(tokenId, corsHeaders) {
 	}
 }
 
+/**
+ * Run ML prediction on a token using browser-based model
+ * @param {string} tokenId - Token ID to predict
+ * @param {Object} corsHeaders - CORS headers to include
+ * @returns {Response} - API response with prediction results
+ */
+async function predictToken(tokenId, corsHeaders) {
+	const apiUrl = `https://api.rugcheck.xyz/v1/tokens/${tokenId}/report`;
+	
+	try {
+		const response = await fetch(apiUrl);
+		
+		if (response.ok) {
+			const data = await response.json();
+			
+			// Use our browser ML model to predict risk
+			const mlPrediction = predictTokenRisk(data);
+			
+			// Prepare response with model prediction
+			const processedData = {
+				token_id: tokenId,
+				status: 'success',
+				name: data.tokenMeta?.name || 'Unknown Token',
+				symbol: data.tokenMeta?.symbol || 'UNK',
+
+				ml_prediction: mlPrediction,
+				price: data.price || 0,
+				model_type: 'Browser-based decision tree'
+			};
+			
+			return new Response(JSON.stringify(processedData), {
+				status: 200,
+				headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+			});
+		} else {
+			return new Response(JSON.stringify({
+				token_id: tokenId,
+				status: 'error',
+				error: `API returned status code: ${response.status}`,
+				message: 'Failed to fetch token data'
+			}), {
+				status: response.status,
+				headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+			});
+		}
+	} catch (error) {
+		return new Response(JSON.stringify({
+			token_id: tokenId,
+			status: 'error',
+			error: error.message,
+			message: 'An error occurred during prediction'
+		}), {
+			status: 500,
+			headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+		});
+	}
+}
+
 async function serveHomePage(corsHeaders) {
 	const html = `
 	<!DOCTYPE html>
@@ -184,19 +245,26 @@ async function serveHomePage(corsHeaders) {
 				<p><strong>Example:</strong> <code>/detect/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</code></p>
 			</div>
 			
+			<div class="endpoint">
+				<h3>ML Prediction</h3>
+				<p><strong>Endpoint:</strong> <code>GET /predict/{token_id}</code></p>
+				<p><strong>Description:</strong> Uses a machine learning model to predict token risk.</p>
+				<p><strong>Example:</strong> <code>/predict/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</code></p>
+			</div>
+			
 			<h3>Response Format</h3>
 			<pre>{
   "token_id": "string",
   "status": "success|error",
   "name": "Token Name",
   "symbol": "TKN",
-  "score_normalized": 0-100,
-  "risk_level": "Safe|Fraud",
-  "market_cap": 0,
-  "liquidity": 0,
-  "holders": 0,
-  "creator_holdings": 0,
-  "anomalies": ["list of detected issues"],
+  "ml_prediction": {
+    "prediction": 0|1,
+    "is_fraud": false|true,
+    "fraud_probability": 0-1,
+    "prediction_confidence": 0-1,
+    "label": "Legitimate|Fraud"
+  },
   "price": 0
 }</pre>
 		</div>

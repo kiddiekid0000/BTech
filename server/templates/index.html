@@ -318,6 +318,7 @@
             border-radius: var(--border-radius);
             padding: 2rem;
             margin-bottom: 2rem;
+            margin-top: 2rem;
             border: 1px solid var(--border-color);
         }
 
@@ -630,14 +631,14 @@
 
                 <div class="form-group">
                     <label for="tokenInput" class="form-label">
-                        <i class="fas fa-coins"></i> Search Token (Name, Symbol, or Contract Address)
+                        <i class="fas fa-coins"></i> Search Token (Token ID)
                     </label>
                     <div class="token-search">
                         <input 
                             type="text" 
                             id="tokenInput" 
                             class="form-input" 
-                            placeholder="Enter token name, symbol (e.g., PEPE), or contract address..."
+                            placeholder="Enter token ID"
                             autocomplete="off"
                         >
                         <div id="searchSuggestions" class="search-suggestions"></div>
@@ -672,10 +673,7 @@
                                 <div class="metric-label">Liquidity</div>
                                 <div class="metric-value" id="liquidity">$0</div>
                             </div>
-                            <div class="metric-item">
-                                <div class="metric-label">Volume (24h)</div>
-                                <div class="metric-value" id="volume24h">$0</div>
-                            </div>
+
                             <div class="metric-item">
                                 <div class="metric-label">Holders</div>
                                 <div class="metric-value" id="holders">0</div>
@@ -684,25 +682,10 @@
                                 <div class="metric-label">Creation Date</div>
                                 <div class="metric-value" id="creationDate">-</div>
                             </div>
-                            <div class="metric-item">
-                                <div class="metric-label">Creator Holdings</div>
-                                <div class="metric-value" id="creatorHoldings">0%</div>
-                            </div>
-                            <div class="metric-item">
-                                <div class="metric-label">Risk Score</div>
-                                <div class="metric-value" id="riskScoreValue">0</div>
-                            </div>
+
                         </div>
 
-                        <div class="anomaly-list">
-                            <h4>
-                                <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
-                                Detected Anomalies
-                            </h4>
-                            <div id="anomaliesList">
-                                <!-- Anomalies will be populated here -->
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -763,12 +746,8 @@
         const riskValue = document.getElementById('riskValue');
         const marketCap = document.getElementById('marketCap');
         const liquidity = document.getElementById('liquidity');
-        const volume24h = document.getElementById('volume24h');
         const holders = document.getElementById('holders');
         const creationDate = document.getElementById('creationDate');
-        const creatorHoldings = document.getElementById('creatorHoldings');
-        const riskScoreValue = document.getElementById('riskScoreValue');
-        const anomaliesList = document.getElementById('anomaliesList');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const navLinks = document.getElementById('navLinks');
 
@@ -839,13 +818,9 @@
                         symbol: data.symbol,
                         marketCap: data.market_cap || 0,
                         liquidity: data.liquidity || 0,
-                        volume24h: data.volume_24h || 0,
                         holders: data.holders || 0,
                         creationDate: data.creation_date ? new Date(data.creation_date) : new Date(),
-                        creatorHoldings: data.creator_holdings || 0,
-                        anomalies: data.anomalies && data.anomalies.length > 0 ? data.anomalies : ['No specific anomalies detected'],
                         riskLevel: data.risk_level === 'Fraud' ? 'high' : 'low',
-                        scoreNormalized: data.score_normalized || 0,
                         apiStatus: 'success'
                     };
                 } else {
@@ -855,13 +830,9 @@
                         symbol: "ERR",
                         marketCap: 0,
                         liquidity: 0,
-                        volume24h: 0,
                         holders: 0,
                         creationDate: new Date(),
-                        creatorHoldings: 0,
-                        anomalies: [data.message || 'Failed to fetch token data'],
                         riskLevel: 'medium',
-                        scoreNormalized: 0,
                         apiStatus: 'error',
                         error: data.error
                     };
@@ -873,13 +844,9 @@
                     symbol: "ERR",
                     marketCap: 0,
                     liquidity: 0,
-                    volume24h: 0,
                     holders: 0,
                     creationDate: new Date(),
-                    creatorHoldings: 0,
-                    anomalies: ['Network error: Unable to fetch token data'],
                     riskLevel: 'medium',
-                    scoreNormalized: 0,
                     apiStatus: 'error',
                     error: error.message
                 };
@@ -948,9 +915,9 @@
                 tokenName.textContent = results.name;
                 tokenSymbol.textContent = results.symbol;
 
-                // Update risk score - display Safe/Fraud based on score
-                const displayRisk = results.scoreNormalized >= 62 ? 'Fraud' : 'Safe';
-                const riskClass = results.scoreNormalized >= 62 ? 'high' : 'low';
+                // Update risk display
+                const riskClass = results.riskLevel === 'high' ? 'high' : 'low';
+                const displayRisk = results.riskLevel === 'high' ? 'Fraud' : 'Legit';
                 
                 riskScore.className = `risk-score ${riskClass}`;
                 riskValue.textContent = displayRisk;
@@ -958,26 +925,11 @@
                 // Update metrics
                 marketCap.textContent = formatCurrency(results.marketCap);
                 liquidity.textContent = formatCurrency(results.liquidity);
-                volume24h.textContent = formatCurrency(results.volume24h);
                 holders.textContent = results.holders.toLocaleString();
                 creationDate.textContent = formatDate(results.creationDate);
-                creatorHoldings.textContent = `${results.creatorHoldings}%`;
-                riskScoreValue.textContent = results.scoreNormalized.toFixed(1);
-
-                // Update anomalies
-                anomaliesList.innerHTML = results.anomalies.map(anomaly => `
-                    <div class="anomaly-item">
-                        <i class="fas fa-exclamation-triangle anomaly-icon"></i>
-                        <span class="anomaly-text">${anomaly}</span>
-                    </div>
-                `).join('');
 
                 // Show results
                 resultsSection.classList.remove('hidden');
-
-                // Scroll to results
-                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
             } catch (error) {
                 console.error('Error during analysis:', error);
                 alert('An error occurred while analyzing the token. Please try again.');
