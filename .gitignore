@@ -93,3 +93,6 @@ ehthumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Server
+server.db

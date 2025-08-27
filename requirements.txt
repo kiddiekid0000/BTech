@@ -3,3 +3,7 @@ python-dotenv
 tqdm
 pandas
 scikit-learn
+SQLAlchemy>=2.0
+requests
+flask
+flask-cors

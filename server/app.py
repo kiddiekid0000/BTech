@@ -1,13 +1,48 @@
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import requests
+import json
+from datetime import datetime, timedelta
+from sqlalchemy import select, desc
+from typing import cast
 from rugcheck.predict import predict_token_risk
+from db import SessionLocal, TokenReport, init_db
 
 app = Flask(__name__)
 CORS(app)
+init_db()
 
 @app.route('/detect/<string:token_id>')
 def detect_token(token_id):
+    # Check cache: return latest record within TTL
+    TTL_HOURS = 24
+    now = datetime.utcnow()
+    cutoff = now - timedelta(hours=TTL_HOURS)
+
+    with SessionLocal() as session:
+        stmt = (
+            select(TokenReport)
+            .where(TokenReport.token_id == token_id)
+            .order_by(desc(TokenReport.fetched_at))
+            .limit(1)
+        )
+    row = session.execute(stmt).scalars().first()
+    report = cast(TokenReport | None, row)
+    if report is not None and report.fetched_at is not None and report.fetched_at >= cutoff:
+            return jsonify({
+                'token_id': token_id,
+                'status': 'success',
+        'name': report.name or 'Unknown Token',
+        'symbol': report.symbol or 'UNK',
+        'risk_level': report.risk_level or 'Safe',
+        'market_cap': report.market_cap or 0,
+        'liquidity': report.liquidity or 0,
+        'holders': report.holders or 0,
+        'creation_date': report.detected_at or '',
+        'price': report.price or 0,
+        'raw_data': json.loads(report.raw_json) if (report.raw_json is not None and len(report.raw_json) > 0) else {}
+            })
+
     url = f'https://api.rugcheck.xyz/v1/tokens/{token_id}/report'
     try:
         response = requests.get(url)
@@ -48,6 +83,29 @@ def detect_token(token_id):
                 'raw_data': data  # Include full raw data for debugging
             }
             
+            # Persist for history and future cache hits
+            try:
+                with SessionLocal() as session:
+                    record = TokenReport(
+                        token_id=token_id,
+                        name=processed_data['name'],
+                        symbol=processed_data['symbol'],
+                        score_normalised=score_normalised,
+                        risk_level=processed_data['risk_level'],
+                        price=price,
+                        holders=total_holders,
+                        liquidity=total_liquidity,
+                        market_cap=market_cap,
+                        creator_holdings_pct=creator_holdings_pct,
+                        detected_at=data.get('detectedAt', ''),
+                        raw_json=json.dumps(data)
+                    )
+                    session.add(record)
+                    session.commit()
+            except Exception:
+                # Don't fail the request if DB write fails
+                pass
+
             return jsonify(processed_data)
         else:
             return jsonify({
