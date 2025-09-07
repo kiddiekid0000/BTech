@@ -106,6 +106,98 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Statistics Dashboard -->
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar" style="color: var(--primary-color); font-size: 1.5rem;"></i>
+                    <h2 class="card-title">Live Statistics</h2>
+                    <div class="auto-refresh-indicator">
+                        <i class="fas fa-sync-alt" id="refreshIcon"></i>
+                        <span id="lastUpdated">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalTokens">-</div>
+                            <div class="stat-label">Total Tokens Analyzed</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card danger">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="fraudTokens">-</div>
+                            <div class="stat-label">Fraud Tokens Detected</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-icon">
+                            <i class="fas fa-shield-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="safeTokens">-</div>
+                            <div class="stat-label">Safe Tokens</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="recentTokens">-</div>
+                            <div class="stat-label">Analyzed (24h)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fraud-percentage-bar">
+                    <div class="fraud-bar-label">
+                        <span>Fraud Detection Rate</span>
+                        <span id="fraudPercentage">0%</span>
+                    </div>
+                    <div class="fraud-bar">
+                        <div class="fraud-bar-fill" id="fraudBarFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tokens Dashboard -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-history" style="color: var(--primary-color); font-size: 1.5rem;"></i>
+                    <h2 class="card-title">Recently Analyzed Tokens</h2>
+                    <button id="refreshTokensBtn" class="btn btn-secondary btn-small">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="token-list" id="tokenList">
+                    <div class="loading-placeholder">
+                        <div class="loading-spinner"></div>
+                        <p>Loading recent tokens...</p>
+                    </div>
+                </div>
+
+                <div class="pagination-controls" id="paginationControls" style="display: none;">
+                    <button id="prevPageBtn" class="btn btn-secondary btn-small">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="nextPageBtn" class="btn btn-secondary btn-small">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </main>
 

@@ -27,7 +27,11 @@ def detect_token(token_id):
             .limit(1)
         )
     row = session.execute(stmt).scalars().first()
-    report = cast(TokenReport | None, row)
+    report = None
+    if TokenReport is not None:
+        report = cast(TokenReport, row)
+    else:
+        report = cast(None, row)
     if report is not None and report.fetched_at is not None and report.fetched_at >= cutoff:
             return jsonify({
                 'token_id': token_id,
@@ -168,6 +172,80 @@ def predict_token(token_id):
             'error': str(e),
             'message': 'An error occurred during prediction'
         }), 500
+
+@app.route('/api/tokens')
+def get_tokens():
+    """Get recent tokens from database with pagination"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Limit per_page to prevent abuse
+    per_page = min(per_page, 100)
+    
+    with SessionLocal() as session:
+        # Get total count
+        total = session.query(TokenReport).count()
+        
+        # Get paginated results, ordered by most recent
+        tokens = (
+            session.query(TokenReport)
+            .order_by(desc(TokenReport.fetched_at))
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+        
+        # Format tokens for JSON response
+        token_list = []
+        for token in tokens:
+            token_data = {
+                'id': token.id,
+                'token_id': token.token_id,
+                'name': token.name or 'Unknown',
+                'symbol': token.symbol or 'UNK',
+                'risk_level': token.risk_level or 'Safe',
+                'score_normalised': token.score_normalised or 0,
+                'price': token.price or 0,
+                'market_cap': token.market_cap or 0,
+                'liquidity': token.liquidity or 0,
+                'holders': token.holders or 0,
+                'creator_holdings_pct': token.creator_holdings_pct or 0,
+                'detected_at': token.detected_at,
+                'fetched_at': token.fetched_at.isoformat() if token.fetched_at else None,
+            }
+            token_list.append(token_data)
+        
+        return jsonify({
+            'tokens': token_list,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'pages': (total + per_page - 1) // per_page
+            }
+        })
+
+@app.route('/api/stats')
+def get_stats():
+    """Get database statistics"""
+    with SessionLocal() as session:
+        total_tokens = session.query(TokenReport).count()
+        
+        # Count by risk level
+        fraud_count = session.query(TokenReport).filter(TokenReport.risk_level == 'Fraud').count()
+        safe_count = session.query(TokenReport).filter(TokenReport.risk_level == 'Safe').count()
+        
+        # Get recent activity (last 24 hours)
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+        recent_count = session.query(TokenReport).filter(TokenReport.fetched_at >= cutoff).count()
+        
+        return jsonify({
+            'total_tokens': total_tokens,
+            'fraud_tokens': fraud_count,
+            'safe_tokens': safe_count,
+            'recent_24h': recent_count,
+            'fraud_percentage': round((fraud_count / total_tokens * 100) if total_tokens > 0 else 0, 1)
+        })
 
 @app.route('/')
 def home():

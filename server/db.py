@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Optional
 from sqlalchemy import (
     create_engine,
     Index,
@@ -39,22 +40,22 @@ class TokenReport(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     token_id: Mapped[str] = mapped_column(index=True, nullable=False)
 
-    name: Mapped[str | None]
-    symbol: Mapped[str | None]
+    name: Mapped[Optional[str]]
+    symbol: Mapped[Optional[str]]
 
-    score_normalised: Mapped[int | None]
-    risk_level: Mapped[str | None]
+    score_normalised: Mapped[Optional[int]]
+    risk_level: Mapped[Optional[str]]
 
-    price: Mapped[float | None]
-    holders: Mapped[int | None]
-    liquidity: Mapped[float | None]
-    market_cap: Mapped[float | None]
-    creator_holdings_pct: Mapped[float | None]
+    price: Mapped[Optional[float]]
+    holders: Mapped[Optional[int]]
+    liquidity: Mapped[Optional[float]]
+    market_cap: Mapped[Optional[float]]
+    creator_holdings_pct: Mapped[Optional[float]]
 
-    detected_at: Mapped[str | None]  # store original string from API
+    detected_at: Mapped[Optional[str]]  # store original string from API
     fetched_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
 
-    raw_json: Mapped[str | None]  # full API payload as JSON string
+    raw_json: Mapped[Optional[str]]  # full API payload as JSON string
 
 
 # Composite index to speed up latest-by-token lookups
