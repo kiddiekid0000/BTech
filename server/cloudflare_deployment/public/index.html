@@ -1163,6 +1163,10 @@
         let currentPage = 1;
         let totalPages = 1;
         let refreshInterval;
+        
+        // Cache for API responses to reduce database load
+        let statsCache = { data: null, timestamp: 0, ttl: 30000 }; // 30 seconds TTL
+        let tokensCache = { data: null, timestamp: 0, page: 0, ttl: 60000 }; // 1 minute TTL
 
         // Initialize dashboard on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -1393,10 +1397,10 @@
                 // Show results
                 resultsSection.classList.remove('hidden');
 
-                // Refresh dashboard data after analysis
+                // Refresh dashboard data after analysis (force refresh to show new data)
                 setTimeout(() => {
-                    loadStats();
-                    loadTokens(currentPage);
+                    loadStats(true);
+                    loadTokens(currentPage, true);
                 }, 1000);
 
                 // Scroll to results
@@ -1420,10 +1424,35 @@
         });
 
         // Dashboard functions
-        async function loadStats() {
+        async function loadStats(forceRefresh = false) {
             try {
+                const now = Date.now();
+                
+                // Check cache first unless force refresh is requested
+                if (!forceRefresh && statsCache.data && (now - statsCache.timestamp) < statsCache.ttl) {
+                    const stats = statsCache.data;
+                    
+                    // Use cached data
+                    totalTokensEl.textContent = stats.total_tokens.toLocaleString();
+                    fraudTokensEl.textContent = stats.fraud_tokens.toLocaleString();
+                    safeTokensEl.textContent = stats.safe_tokens.toLocaleString();
+                    recentTokensEl.textContent = stats.recent_24h.toLocaleString();
+                    
+                    fraudPercentageEl.textContent = `${stats.fraud_percentage}%`;
+                    fraudBarFillEl.style.width = `${stats.fraud_percentage}%`;
+                    
+                    const cacheAge = Math.round((now - statsCache.timestamp) / 1000);
+                    lastUpdatedEl.textContent = `Cached ${cacheAge}s ago`;
+                    return;
+                }
+                
+                // Fetch fresh data
                 const response = await fetch('/api/stats');
                 const stats = await response.json();
+                
+                // Update cache
+                statsCache.data = stats;
+                statsCache.timestamp = now;
                 
                 // Animate numbers
                 animateNumber(totalTokensEl, stats.total_tokens);
@@ -1444,8 +1473,28 @@
             }
         }
 
-        async function loadTokens(page = 1) {
+        async function loadTokens(page = 1, forceRefresh = false) {
             try {
+                const now = Date.now();
+                
+                // Check cache first unless force refresh is requested
+                if (!forceRefresh && tokensCache.data && tokensCache.page === page && 
+                    (now - tokensCache.timestamp) < tokensCache.ttl) {
+                    const data = tokensCache.data;
+                    
+                    // Use cached data
+                    if (data.tokens && data.tokens.length > 0) {
+                        tokenListEl.innerHTML = data.tokens.map(token => createTokenItem(token)).join('');
+                        currentPage = data.pagination.page;
+                        totalPages = data.pagination.pages;
+                        updatePagination();
+                        addTokenClickHandlers();
+                    } else {
+                        showNoTokensMessage();
+                    }
+                    return;
+                }
+                
                 // Show loading
                 tokenListEl.innerHTML = `
                     <div class="loading-placeholder">
@@ -1457,6 +1506,11 @@
                 const response = await fetch(`/api/tokens?page=${page}&per_page=10`);
                 const data = await response.json();
                 
+                // Update cache
+                tokensCache.data = data;
+                tokensCache.timestamp = now;
+                tokensCache.page = page;
+                
                 if (data.tokens && data.tokens.length > 0) {
                     // Display tokens
                     tokenListEl.innerHTML = data.tokens.map(token => createTokenItem(token)).join('');
@@ -1467,31 +1521,10 @@
                     updatePagination();
                     
                     // Add click handlers to token items
-                    document.querySelectorAll('.token-item').forEach(item => {
-                        item.addEventListener('click', () => {
-                            const tokenId = item.dataset.tokenId;
-                            if (tokenId) {
-                                // Fill the search input and analyze
-                                tokenInput.value = tokenId;
-                                analyzeBtn.click();
-                                
-                                // Scroll to results
-                                document.querySelector('#resultsSection').scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'start'
-                                });
-                            }
-                        });
-                    });
+                    addTokenClickHandlers();
                     
                 } else {
-                    tokenListEl.innerHTML = `
-                        <div class="loading-placeholder">
-                            <i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 1rem; color: var(--text-muted);"></i>
-                            <p>No tokens found in database</p>
-                            <small>Analyze some tokens to see them here</small>
-                        </div>
-                    `;
+                    showNoTokensMessage();
                 }
                 
             } catch (error) {
@@ -1504,6 +1537,35 @@
                     </div>
                 `;
             }
+        }
+        
+        function addTokenClickHandlers() {
+            document.querySelectorAll('.token-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const tokenId = item.dataset.tokenId;
+                    if (tokenId) {
+                        // Fill the search input and analyze
+                        tokenInput.value = tokenId;
+                        analyzeBtn.click();
+                        
+                        // Scroll to results
+                        document.querySelector('#resultsSection').scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+        
+        function showNoTokensMessage() {
+            tokenListEl.innerHTML = `
+                <div class="loading-placeholder">
+                    <i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 1rem; color: var(--text-muted);"></i>
+                    <p>No tokens found in database</p>
+                    <small>Analyze some tokens to see them here</small>
+                </div>
+            `;
         }
 
         function createTokenItem(token) {
@@ -1594,15 +1656,15 @@
         }
 
         function startAutoRefresh() {
-            // Refresh stats every 30 seconds
+            // Refresh stats every 60 seconds (reduced frequency)
             refreshInterval = setInterval(() => {
-                loadStats();
-            }, 30000);
+                loadStats(true); // Force refresh for auto-updates
+            }, 60000);
             
-            // Refresh tokens every 2 minutes
+            // Refresh tokens every 5 minutes (reduced frequency)
             setInterval(() => {
-                loadTokens(currentPage);
-            }, 120000);
+                loadTokens(currentPage, true); // Force refresh for auto-updates
+            }, 300000);
         }
 
         // Event listeners for pagination
@@ -1620,8 +1682,8 @@
 
         // Refresh tokens button
         refreshTokensBtn.addEventListener('click', () => {
-            loadTokens(currentPage);
-            loadStats();
+            loadTokens(currentPage, true); // Force refresh
+            loadStats(true); // Force refresh
             
             // Add pulse effect
             refreshTokensBtn.classList.add('pulse');

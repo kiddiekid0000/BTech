@@ -90,7 +90,7 @@ export async function getCachedTokenReport(db, tokenId, ttlHours = 24) {
 }
 
 /**
- * Get paginated list of recent tokens
+ * Get paginated list of recent tokens with optimized query
  * @param {D1Database} db - D1 database instance
  * @param {number} page - Page number (1-based)
  * @param {number} perPage - Items per page
@@ -102,17 +102,13 @@ export async function getRecentTokens(db, page = 1, perPage = 20) {
         perPage = Math.min(perPage, 100);
         const offset = (page - 1) * perPage;
 
-        // Get total count
-        const countStmt = db.prepare('SELECT COUNT(*) as total FROM token_reports');
-        const countResult = await countStmt.first();
-        const total = countResult?.total || 0;
-
-        // Get paginated results
+        // Use a single query with window function to get both count and data
         const stmt = db.prepare(`
             SELECT 
                 id, token_id, name, symbol, risk_level, score_normalised,
                 price, market_cap, liquidity, holders, creator_holdings_pct,
-                detected_at, fetched_at
+                detected_at, fetched_at,
+                COUNT(*) OVER() as total_count
             FROM token_reports 
             ORDER BY fetched_at DESC 
             LIMIT ? OFFSET ?
@@ -120,6 +116,12 @@ export async function getRecentTokens(db, page = 1, perPage = 20) {
 
         const results = await stmt.bind(perPage, offset).all();
         const tokens = results.results || [];
+        
+        // Extract total count from first row (if any)
+        const total = tokens.length > 0 ? tokens[0].total_count : 0;
+        
+        // Remove total_count from each token object
+        tokens.forEach(token => delete token.total_count);
 
         return {
             tokens,
@@ -137,34 +139,28 @@ export async function getRecentTokens(db, page = 1, perPage = 20) {
 }
 
 /**
- * Get database statistics
+ * Get database statistics with a single optimized query
  * @param {D1Database} db - D1 database instance
  * @returns {Promise<Object>} - Database statistics
  */
 export async function getDatabaseStats(db) {
     try {
-        // Get total tokens
-        const totalStmt = db.prepare('SELECT COUNT(*) as total FROM token_reports');
-        const totalResult = await totalStmt.first();
-        const totalTokens = totalResult?.total || 0;
-
-        // Get fraud tokens count
-        const fraudStmt = db.prepare("SELECT COUNT(*) as count FROM token_reports WHERE risk_level = 'Fraud'");
-        const fraudResult = await fraudStmt.first();
-        const fraudCount = fraudResult?.count || 0;
-
-        // Get safe tokens count
-        const safeStmt = db.prepare("SELECT COUNT(*) as count FROM token_reports WHERE risk_level = 'Safe'");
-        const safeResult = await safeStmt.first();
-        const safeCount = safeResult?.count || 0;
-
-        // Get recent activity (last 24 hours)
-        const recentStmt = db.prepare(`
-            SELECT COUNT(*) as count FROM token_reports 
-            WHERE datetime(fetched_at) >= datetime('now', '-24 hours')
+        // Single query to get all statistics at once
+        const stmt = db.prepare(`
+            SELECT 
+                COUNT(*) as total_tokens,
+                SUM(CASE WHEN risk_level = 'Fraud' THEN 1 ELSE 0 END) as fraud_tokens,
+                SUM(CASE WHEN risk_level = 'Safe' THEN 1 ELSE 0 END) as safe_tokens,
+                SUM(CASE WHEN datetime(fetched_at) >= datetime('now', '-24 hours') THEN 1 ELSE 0 END) as recent_24h
+            FROM token_reports
         `);
-        const recentResult = await recentStmt.first();
-        const recentCount = recentResult?.count || 0;
+        
+        const result = await stmt.first();
+        
+        const totalTokens = result?.total_tokens || 0;
+        const fraudCount = result?.fraud_tokens || 0;
+        const safeCount = result?.safe_tokens || 0;
+        const recentCount = result?.recent_24h || 0;
 
         // Calculate fraud percentage
         const fraudPercentage = totalTokens > 0 
