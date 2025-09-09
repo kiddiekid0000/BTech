@@ -1,9 +1,7 @@
 /**
- * Simplified ML model for browser-based token fraud detection
- * Uses TensorFlow.js for inference
+ * ML model for token fraud detection in Cloudflare Workers
+ * Uses decision tree logic and external API calls for predictions
  */
-
-import * as tf from '@tensorflow/tfjs';
 
 // Decision tree thresholds derived from the Python RandomForest model
 // These values are simplified approximations
@@ -100,17 +98,53 @@ function decisionTree(features) {
 }
 
 /**
- * Predict token risk using simplified browser model
+ * Predict token risk using external ML API (Replicate)
+ * @param {Object} tokenData - Token data from API
+ * @param {string} replicateToken - Replicate API token
+ * @returns {Promise<Object>} - Prediction results
+ */
+export async function predictTokenRiskAPI(tokenData, replicateToken) {
+    try {
+        const response = await fetch('https://api.replicate.com/v1/predictions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${replicateToken}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'wait'
+            },
+            body: JSON.stringify({
+                version: "enhance-replicate/tcap_finale:6975488a19ab9c27d9656ea29a711dd0471b53e6ec15cb17699f9cbd714980cc",
+                input: {
+                    token_data: JSON.stringify(tokenData)
+                }
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            return result.output;
+        } else {
+            console.warn('Replicate API failed, falling back to local prediction');
+            return predictTokenRiskLocal(tokenData);
+        }
+    } catch (error) {
+        console.warn('Error calling Replicate API, falling back to local prediction:', error);
+        return predictTokenRiskLocal(tokenData);
+    }
+}
+
+/**
+ * Local token risk prediction using decision tree logic
  * @param {Object} tokenData - Token data from API
  * @returns {Object} - Prediction results
  */
-export function predictTokenRisk(tokenData) {
-  // Extract features from token data
-  const features = extractFeatures(tokenData);
-  
-  // Normalize features for model input
-  const normalizedFeatures = normalizeFeatures(features);
-  
-  // Use decision tree for prediction
-  return decisionTree(normalizedFeatures);
+export function predictTokenRiskLocal(tokenData) {
+    // Extract features from token data
+    const features = extractFeatures(tokenData);
+    
+    // Normalize features for model input
+    const normalizedFeatures = normalizeFeatures(features);
+    
+    // Use decision tree for prediction
+    return decisionTree(normalizedFeatures);
 }

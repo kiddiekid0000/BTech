@@ -1,19 +1,36 @@
 {
-	"name": "token-detector-2",
-	"version": "0.0.0",
+	"name": "token-anomaly-detector",
+	"version": "1.0.0",
+	"description": "Token Anomaly Detector powered by Cloudflare Workers and D1 Database",
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
+		"setup": "./deploy.sh",
+		"db:create": "wrangler d1 create token-detector-db",
+		"db:migrate": "wrangler d1 execute token-detector-db --file=./schema.sql",
+		"db:query": "wrangler d1 execute token-detector-db --command",
+		"logs": "wrangler tail",
 		"test": "vitest"
 	},
+	"keywords": [
+		"cloudflare-workers",
+		"d1-database",
+		"token-analysis",
+		"fraud-detection",
+		"machine-learning",
+		"cryptocurrency",
+		"serverless"
+	],
+	"author": "Token Anomaly Detector Team",
+	"license": "MIT",
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
 		"vitest": "~3.2.0",
-		"wrangler": "^4.31.0"
+		"wrangler": "^4.34.0"
 	},
-	"dependencies": {
-		"@tensorflow/tfjs": "^4.22.0"
+	"engines": {
+		"node": ">=18.0.0"
 	}
 }
