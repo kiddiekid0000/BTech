@@ -151,7 +151,6 @@ def predict_token(token_id):
                 'status': 'success',
                 'name': data.get('tokenMeta', {}).get('name', 'Unknown Token'),
                 'symbol': data.get('tokenMeta', {}).get('symbol', 'UNK'),
-
                 'ml_prediction': prediction_result,
                 'price': data.get('price', 0),
             }
