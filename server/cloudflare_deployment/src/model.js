@@ -103,7 +103,7 @@ function decisionTree(features) {
  * @param {string} replicateToken - Replicate API token
  * @returns {Promise<Object>} - Prediction results
  */
-export async function predictTokenRiskAPI(tokenData, replicateToken) {
+export async function predictTokenRiskAPI(tokenData, replicateModel, replicateToken) {
     try {
         const response = await fetch('https://api.replicate.com/v1/predictions', {
             method: 'POST',
@@ -113,7 +113,7 @@ export async function predictTokenRiskAPI(tokenData, replicateToken) {
                 'Prefer': 'wait'
             },
             body: JSON.stringify({
-                version: "enhance-replicate/tcap_finale:6975488a19ab9c27d9656ea29a711dd0471b53e6ec15cb17699f9cbd714980cc",
+                version: replicateModel,
                 input: {
                     token_data: JSON.stringify(tokenData)
                 }

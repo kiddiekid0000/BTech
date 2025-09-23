@@ -974,15 +974,6 @@
                             </div>
                         </div>
 
-                        <div class="anomaly-list">
-                            <h4>
-                                <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
-                                ML Prediction Results
-                            </h4>
-                            <div id="mlPredictionResults">
-                                <!-- ML prediction results will be populated here -->
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1139,7 +1130,6 @@
         const holders = document.getElementById('holders');
         const creationDate = document.getElementById('creationDate');
         const creatorHoldings = document.getElementById('creatorHoldings');
-        const mlPredictionResults = document.getElementById('mlPredictionResults');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const navLinks = document.getElementById('navLinks');
 
@@ -1358,41 +1348,6 @@
                 holders.textContent = results.holders.toLocaleString();
                 creationDate.textContent = formatDate(results.creationDate);
                 creatorHoldings.textContent = `${results.creatorHoldings}%`;
-
-                // Update ML prediction results
-                if (results.mlPrediction) {
-                    const prediction = results.mlPrediction;
-                    mlPredictionResults.innerHTML = `
-                        <div class="anomaly-item">
-                            <i class="fas fa-robot anomaly-icon" style="color: var(--primary-color);"></i>
-                            <span class="anomaly-text">
-                                <strong>ML Prediction:</strong> ${prediction.label || 'Unknown'} 
-                                (${((prediction.fraud_probability || 0) * 100).toFixed(1)}% fraud probability)
-                            </span>
-                        </div>
-                        <div class="anomaly-item">
-                            <i class="fas fa-chart-line anomaly-icon" style="color: var(--accent-color);"></i>
-                            <span class="anomaly-text">
-                                <strong>Confidence:</strong> ${((prediction.prediction_confidence || 0) * 100).toFixed(1)}%
-                            </span>
-                        </div>
-                        ${results.cached ? `
-                        <div class="anomaly-item">
-                            <i class="fas fa-clock anomaly-icon" style="color: var(--warning-color);"></i>
-                            <span class="anomaly-text">
-                                <strong>Cached data</strong> (${results.cacheAgeHours}h old)
-                            </span>
-                        </div>
-                        ` : ''}
-                    `;
-                } else {
-                    mlPredictionResults.innerHTML = `
-                        <div class="anomaly-item">
-                            <i class="fas fa-exclamation-triangle anomaly-icon"></i>
-                            <span class="anomaly-text">ML prediction unavailable</span>
-                        </div>
-                    `;
-                }
 
                 // Show results
                 resultsSection.classList.remove('hidden');

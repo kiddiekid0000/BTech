@@ -2,11 +2,6 @@
 
 A comprehensive token analysis tool designed to detect suspicious patterns, anomalies, and risk factors in cryptocurrency tokens, specifically targeting tokens from the Pump.fun ecosystem. This project provides both a Python Flask backend and a Cloudflare Workers implementation with a modern web interface.
 
-## Test Website
-```bash
-https://token-detector-2.myworkspace.workers.dev/
-```
-
 ## 🚀 Features
 
 - **Real-time Token Analysis**: Analyze tokens by name, symbol, or contract address
@@ -20,27 +15,6 @@ https://token-detector-2.myworkspace.workers.dev/
 - **Modern Web Interface**: Responsive, dark-themed UI with real-time search suggestions
 - **Multiple Deployment Options**: Flask development server and Cloudflare Workers production deployment
 
-## 🏗️ Architecture
-
-### Backend Components
-
-1. **Flask Application** (`app.py`)
-   - RESTful API for token analysis
-   - CORS-enabled for cross-origin requests
-   - Comprehensive error handling
-
-2. **Cloudflare Workers** (`token-detector-2/src/index.js`)
-   - Serverless deployment option
-   - Edge computing for global performance
-   - Built-in static asset serving
-
-### Frontend
-
-- **Modern Web Interface**: Responsive single-page application
-- **Real-time Search**: Auto-complete suggestions for popular tokens
-- **Interactive Results**: Color-coded risk assessments and detailed metrics
-- **Mobile-Friendly**: Fully responsive design
-
 ## 📊 Risk Assessment Methodology
 
 The system evaluates tokens using multiple factors:
@@ -49,58 +23,6 @@ The system evaluates tokens using multiple factors:
 - **Market Analysis**: Market cap, liquidity, and trading volume ratios
 - **Holder Distribution**: Creator holdings percentage and total holders
 - **Temporal Factors**: Token age and creation patterns
-
-## 🛠️ Installation & Setup
-
-### Prerequisites
-
-- Python 3.7+ (for Flask backend)
-- Node.js 16+ (for Cloudflare Workers)
-- Modern web browser
-
-### Flask Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd frontend
-   ```
-
-2. **Install Python dependencies**
-   ```bash
-   pip install flask flask-cors requests
-   ```
-
-3. **Run the Flask application**
-   ```bash
-   python app.py
-   ```
-
-4. **Access the application**
-   - Open your browser to `http://localhost:5000`
-   - The web interface will be served from `templates/index.html`
-
-### Cloudflare Workers Deployment
-
-1. **Navigate to the Workers directory**
-   ```bash
-   cd token-detector-2
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Local development**
-   ```bash
-   npm run dev
-   ```
-
-4. **Deploy to Cloudflare**
-   ```bash
-   npm run deploy
-   ```
 
 ## 🔧 Configuration
 
@@ -142,27 +64,6 @@ The system evaluates tokens using multiple factors:
 }
 ```
 
-**Example Request:**
-```bash
-curl https://your-domain.com/detect/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-```
-
-## 🧪 Testing
-
-### Cloudflare Workers Tests
-
-The project includes test suites for the Cloudflare Workers implementation:
-
-```bash
-cd token-detector-2
-npm test
-```
-
-**Test Configuration:**
-- Framework: Vitest with Cloudflare Workers pool
-- Coverage: Unit and integration tests
-- Configuration: `vitest.config.js`
-
 ## 🎨 Frontend Features
 
 ### User Interface
@@ -171,12 +72,6 @@ npm test
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Interactive Elements**: Hover effects, smooth animations
 - **Loading States**: Visual feedback during API calls
-
-### Search Functionality
-
-- **Auto-complete**: Real-time suggestions for popular tokens
-- **Multiple Input Types**: Support for names, symbols, and addresses
-- **Token Resolution**: Automatic conversion of names/symbols to addresses
 
 ### Results Display
 
@@ -197,50 +92,9 @@ npm test
 **Important Notice:**
 - This tool is for educational and research purposes only
 - Not affiliated with Pump.fun or any cryptocurrency platform
-- No financial advice - always do your own research (DYOR)
+- No financial advice - always do your own research
 - Token analysis is based on available data and may not be 100% accurate
 - Cryptocurrency investments carry significant risk
-
-## 🛣️ Roadmap
-
-### Planned Features
-
-- [ ] Real-time token monitoring and alerts
-- [ ] Historical risk trend analysis
-- [ ] Integration with additional data sources
-- [ ] Advanced anomaly detection algorithms
-- [ ] Portfolio risk assessment tools
-- [ ] API rate limiting and authentication
-- [ ] Database storage for historical analysis
-
-### Potential Improvements
-
-- [ ] Enhanced mobile experience
-- [ ] Social sentiment analysis integration
-- [ ] Automated reporting features
-- [ ] Machine learning risk models
-- [ ] Multi-chain support
-
-## 📄 License
-
-This project is available for educational and research purposes. Please ensure compliance with all applicable laws and regulations when using cryptocurrency analysis tools.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please consider:
-
-1. **Bug Reports**: Report issues with detailed reproduction steps
-2. **Feature Requests**: Suggest new functionality with use cases
-3. **Code Contributions**: Follow the existing code style and patterns
-4. **Documentation**: Help improve documentation and examples
-
-## 📞 Support
-
-For questions, issues, or suggestions:
-
-1. **GitHub Issues**: Use the repository issue tracker
-2. **Documentation**: Refer to this README and code comments
-3. **Community**: Engage with the cryptocurrency development community
 
 ---
 

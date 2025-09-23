@@ -139,7 +139,7 @@ async function handlePredictToken(tokenId, searchParams, env, corsHeaders) {
         let mlPrediction = null;
         try {
             if (env.REPLICATE_API_TOKEN) {
-                mlPrediction = await predictTokenRiskAPI(data, env.REPLICATE_API_TOKEN);
+                mlPrediction = await predictTokenRiskAPI(data, env.REPLICATE_MODEL, env.REPLICATE_API_TOKEN);
             } else {
                 mlPrediction = predictTokenRiskLocal(data);
             }

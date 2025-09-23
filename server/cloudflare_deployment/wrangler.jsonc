@@ -3,27 +3,28 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "pump-token-detector",
-	"main": "src/index.js",
-	"compatibility_date": "2024-01-15",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"assets": {
-		"directory": "./public"
-	},
-	"observability": {
-		"enabled": true
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "token-detector-db",
-			"database_id": ""
-		}
-	],
-	"vars": {
-		"REPLICATE_API_TOKEN": ""
-	}
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "pump-token-detector-v2",
+    "main": "src/index.js",
+    "compatibility_date": "2024-01-15",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "assets": {
+        "directory": "./public"
+    },
+    "observability": {
+        "enabled": true
+    },
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "token-detector-db",
+            "database_id": ""
+        }
+    ],
+    "vars": {
+        "REPLICATE_MODEL": "",
+        "REPLICATE_API_TOKEN": ""
+    }
 }
